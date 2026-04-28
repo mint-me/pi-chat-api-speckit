@@ -7,8 +7,7 @@
 email/password registration, JWT login, authenticated SSE streaming chat backed by
 OpenRouter or a deterministic mock provider, persisted user conversation history,
 PostgreSQL database schema with Alembic migrations, Docker Compose local
-operation, deterministic tests, documentation, and no automatic remote submission
-or interviewer invitations."
+operation, deterministic tests, documentation."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -104,8 +103,6 @@ verify the parser emits content chunks and stops at `[DONE]`.
   persisting a completed assistant message.
 - Invalid conversation IDs and cross-user conversation IDs return 404.
 - `.env` and real secrets are never tracked.
-- Automated flows never invite contributors, push to remotes, or contact real
-  interviewers.
 
 ## Requirements *(mandatory)*
 
@@ -135,8 +132,6 @@ verify the parser emits content chunks and stops at `[DONE]`.
   while excluding prompts, responses, passwords, tokens, and API keys.
 - **FR-013**: System MUST document setup, design decisions, testing strategy,
   database choice, security notes, and future work.
-- **FR-014**: System MUST NOT push code, create a remote repository, invite
-  contributors, or contact interviewers automatically.
 
 ### Key Entities
 

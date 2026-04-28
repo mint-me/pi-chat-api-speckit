@@ -101,7 +101,7 @@ tests to keep runs fast and deterministic.
 - Cross-user conversation access returns 404, not 403, to avoid leaking
   resource existence.
 
-## Simple LLM Observability (Without OpenTelemetry)
+## Simple LLM Observability
 
 The current implementation tracks the most useful operational signals with low
 complexity:

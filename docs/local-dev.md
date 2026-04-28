@@ -25,9 +25,11 @@ See [uv installation guide](https://docs.astral.sh/uv/getting-started/installati
 
 ### Create and activate a venv
 
+This project pins Python 3.12 via `.python-version` (created by `uv python pin`).
+
 ```bash
-# Create a venv for this project (Python 3.12 is pinned in pyproject.toml)
-uv venv
+# Create a venv for this project (uses Python 3.12 from .python-version)
+uv venv -p 3.12
 
 # Activate the venv
 source .venv/bin/activate    # macOS / Linux
@@ -38,6 +40,37 @@ source .venv/bin/activate    # macOS / Linux
 uv sync --dev
 
 # Verify: you should see `(.venv)` in your shell prompt
+```
+
+Alternatively, let `uv` auto-detect the version from `.python-version`:
+
+```bash
+uv venv          # reads version from .python-version
+source .venv/bin/activate
+uv sync --dev
+```
+
+---
+
+### Python version pinning (`.python-version`)
+
+The `.python-version` file pins the project to Python 3.12:
+
+```
+3.12
+```
+
+This file is:
+- **Recognized by `uv`**: `uv venv` auto-detects and uses 3.12
+- **Standard format**: Used by pyenv and other Python version managers
+- **Created and updated with**: `uv python pin 3.12`
+- **Committed to git**: Ensures all developers use the same Python version
+
+If you need to update the Python version:
+
+```bash
+uv python pin 3.12        # Updates .python-version and pyproject.toml
+uv python pin --rm        # Remove the pin
 ```
 
 ---
