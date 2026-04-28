@@ -5,6 +5,7 @@ from pathlib import Path
 
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("JWT_SECRET_KEY", "x" * 32)
+os.environ.setdefault("OPENROUTER_API_KEY", "")
 
 import pytest
 import pytest_asyncio
