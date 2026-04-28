@@ -22,5 +22,10 @@ Values handled in CI:
   deterministic CI-safe fallback value
 - `OPENROUTER_API_KEY`: optional; not required for base checks
 
+The Compose smoke job copies `.env.example` to `.env`, so every variable needed
+by `docker-compose.yml` must be present in `.env.example`. Keep Compose-only
+values such as `COMPOSE_PROJECT_NAME`, `API_PORT`, and `POSTGRES_*` documented
+there instead of hardcoding them in the Compose file.
+
 For optional provider integration checks, add repository secret
 `OPENROUTER_API_KEY` and gate those checks behind secret presence.

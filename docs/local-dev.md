@@ -128,6 +128,19 @@ make seed
 uv run uvicorn app.main:app --reload
 ```
 
+### Environment variables
+
+`.env.example` contains the complete local configuration surface:
+
+- `COMPOSE_PROJECT_NAME` and `API_PORT` control the Compose project name and host API port.
+- `POSTGRES_IMAGE`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, and `POSTGRES_PORT` configure the Compose Postgres service.
+- `DATABASE_URL` must match the Postgres values used by the app runtime.
+- `JWT_SECRET_KEY` must be at least 32 characters and must be replaced outside disposable local development.
+- `OPENROUTER_API_KEY` is optional; leave it empty to use the deterministic mock provider.
+
+When running the API directly on the host instead of inside Compose, point
+`DATABASE_URL` at the host-reachable database address.
+
 Reset database and seed demo data:
 
 ```bash

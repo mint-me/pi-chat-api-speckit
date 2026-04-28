@@ -8,8 +8,21 @@ docker compose up --build
 make smoke
 ```
 
+The copied `.env` is the source for Compose interpolation and app settings.
+Before using a shared or long-lived environment, replace `POSTGRES_PASSWORD` and
+`JWT_SECRET_KEY`, then keep `DATABASE_URL` consistent with the `POSTGRES_*`
+values.
+
 If port 8000 is already in use, run Compose with `API_PORT=18000` and smoke with
 `uv run python scripts/smoke.py http://localhost:18000`.
+
+If you change Postgres credentials after a local database volume already exists,
+recreate the volume:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
 
 For a seeded demo account:
 

@@ -16,6 +16,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
+The copied `.env` supplies Compose interpolation and app settings. If you change
+`POSTGRES_*` credentials, keep `DATABASE_URL` aligned and recreate any existing
+local Postgres volume with `docker compose down -v`.
+
 Open `http://localhost:8000/docs` or run the live smoke check:
 
 ```bash
