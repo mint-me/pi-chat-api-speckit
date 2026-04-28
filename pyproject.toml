@@ -1,0 +1,51 @@
+[project]
+name = "pi-chat-api-speckit"
+version = "0.1.0"
+description = "Minimal LLM-powered chat API for the Pi School SWE take-home"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "psycopg[binary]>=3.3.3",
+    "pwdlib[argon2]>=0.3.0",
+    "pydantic-settings>=2.14.0",
+    "pyjwt>=2.12.1",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "uvicorn[standard]>=0.46.0",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "coverage>=7.13.5",
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "respx>=0.23.1",
+    "ruff>=0.15.12",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
