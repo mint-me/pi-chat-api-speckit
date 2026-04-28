@@ -33,6 +33,12 @@ Then the scaffold is expanded in this order:
 5. Docker Compose (`api`, `db`, optional `demo` seed)
 6. Tests, smoke, CI, and docs
 
+### Alembic Database Migrations
+
+`alembic/script.py.mako` is the Jinja2 template Alembic uses when generating
+new migration files via `alembic revision`. It is created by `alembic init`
+and is expected in all Alembic projects.
+
 ## Rebuild Commands (From Empty Workspace)
 
 ```bash
@@ -45,3 +51,33 @@ make smoke
 ```
 
 Expected verification order: lint -> tests -> compose health -> smoke.
+
+---
+
+## How This Project Was Specified
+
+This project used [spec-kit](https://github.com/github/spec-kit) v0.8.2 to manage
+the specification-first workflow.
+
+spec-kit generates the `.specify/` and `.agents/` infrastructure automatically
+(the spec-kit framework templates and AI agent skill definitions). These
+directories are gitignored because they are reproducible via `speckit init`.
+The `specs/001-llm-chat-api/` directory contains the project-specific artifacts:
+constitution, feature specification, research decisions, implementation plan,
+and task list.
+
+### Reinstalling spec-kit
+
+To regenerate `.specify/` and `.agents/` from a clone (they are not tracked):
+
+```bash
+# Requires GitHub CLI (https://cli.github.com)
+gh extension install github/spec-kit
+
+# Initialize spec-kit in the project root
+speckit init
+```
+
+This workflow used the spec-kit methodology: constitution → specification →
+research → plan → tasks → implementation, with each step producing artifacts
+in the `specs/` directory.
