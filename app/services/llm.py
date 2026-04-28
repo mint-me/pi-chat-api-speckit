@@ -35,7 +35,12 @@ class MockClient(LLMClient):
     model = "mock"
 
     async def stream(self, messages: Sequence[dict[str, str]]) -> AsyncIterator[str]:
-        chunks = ["Hello", " from", " the", " mock", " provider."]
+        chunks = [
+            "The ", "quick ", "brown ", "fox ", "jumps ", "over ", "the ", "lazy ", "dog. ",
+            "This ", "is ", "a ", "longer ", "response ", "with ", "multiple ", "chunks ",
+            "that ", "streams ", "gradually. ", "Each ", "piece ", "arrives ", "with ", "a ",
+            "realistic ", "200ms ", "delay ", "to ", "simulate ", "real ", "LLM ", "responses.",
+        ]
         for chunk in chunks:
             await asyncio.sleep(0.2)
             yield chunk
