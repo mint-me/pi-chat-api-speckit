@@ -13,7 +13,10 @@ COPY . .
 RUN uv sync --frozen --dev
 
 FROM base AS runtime
-COPY . .
+COPY alembic alembic
+COPY app app
+COPY scripts scripts
+COPY alembic.ini .
 RUN useradd -r -u 1001 -g root -m -d /home/appuser appuser \
     && mkdir -p /home/appuser/.cache/uv \
     && chown -R appuser:root /app /home/appuser

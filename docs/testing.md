@@ -38,6 +38,12 @@ To print live token chunks from SSE:
 make smoke SMOKE_ARGS=--show-stream
 ```
 
+To run smoke with the seeded demo user:
+
+```bash
+make smoke SMOKE_ARGS="--show-stream --use-demo-user"
+```
+
 To force mock provider in smoke:
 
 ```bash

@@ -7,27 +7,38 @@ import uuid
 import httpx
 
 
-async def main(base_url: str, show_stream: bool = False) -> int:
-    """Run a live HTTP smoke test."""
+async def _login_existing_user(
+    client: httpx.AsyncClient, email: str, password: str
+) -> tuple[dict[str, str], str]:
+    response = await client.post("/auth/login", json={"email": email, "password": password})
+    response.raise_for_status()
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}, email
+
+
+async def _register_and_login_random_user(client: httpx.AsyncClient) -> tuple[dict[str, str], str]:
     email = f"smoke+{uuid.uuid4().hex[:8]}@example.com"
     password = "password123"
+    response = await client.post(
+        "/auth/register",
+        json={"email": email, "password": password},
+    )
+    response.raise_for_status()
+    return await _login_existing_user(client, email, password)
+
+
+async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = False) -> int:
+    """Run a live HTTP smoke test."""
     async with httpx.AsyncClient(base_url=base_url, timeout=30.0) as client:
         response = await client.get("/health")
         response.raise_for_status()
 
-        response = await client.post(
-            "/auth/register",
-            json={"email": email, "password": password},
-        )
-        response.raise_for_status()
-
-        response = await client.post(
-            "/auth/login",
-            json={"email": email, "password": password},
-        )
-        response.raise_for_status()
-        token = response.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
+        if use_demo_user:
+            headers, email = await _login_existing_user(
+                client, email="demo@example.com", password="password123"
+            )
+        else:
+            headers, email = await _register_and_login_random_user(client)
 
         saw_token = False
         saw_done = False
@@ -79,5 +90,18 @@ if __name__ == "__main__":
         action="store_true",
         help="Print SSE lines from /chat for debugging",
     )
+    parser.add_argument(
+        "--use-demo-user",
+        action="store_true",
+        help="Use demo@example.com/password123 instead of creating a random account",
+    )
     args = parser.parse_args()
-    raise SystemExit(asyncio.run(main(args.base_url, show_stream=args.show_stream)))
+    raise SystemExit(
+        asyncio.run(
+            main(
+                args.base_url,
+                show_stream=args.show_stream,
+                use_demo_user=args.use_demo_user,
+            )
+        )
+    )

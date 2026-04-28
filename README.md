@@ -1,22 +1,21 @@
-# Pi School Chat API
+# Chat API
 
-Minimal FastAPI chat service for the Pi School SWE take-home.
+Minimal FastAPI chat service.
 The app uses PostgreSQL, JWT auth, SSE streaming, Alembic migrations, and a
 provider boundary that switches between OpenRouter and a deterministic mock.
 
 ## Quick Start
 
-See `docs/quickstart.md` for the single source of truth.
+See [Quickstart](docs/quickstart.md) for the single source of truth.
 
 ## Documentation
 
-- `docs/quickstart.md` - running the built project
-- `docs/architecture.md` - boundaries and design decisions
-- `docs/local-dev.md` - local development workflow
-- `docs/testing.md` - test layers and mocking strategy
-- `docs/ci.md` - CI rationale
-- `docs/scaffolding.md` - build-from-scratch audit trail
-- `docs/faq.md` - common implementation questions
+- [Quickstart](docs/quickstart.md) - run the stack
+- [Architecture](docs/architecture.md) - boundaries and design decisions
+- [Local Dev](docs/local-dev.md) - local development workflow
+- [Testing](docs/testing.md) - test layers and mocking strategy
+- [CI](docs/ci.md) - automation strategy
+- [Scaffolding](docs/scaffolding.md) - scaffold and rebuild flow
 
 ## Configuration
 
@@ -55,8 +54,8 @@ to test end-to-end with FastAPI and httpx.
 OpenRouter is optional. When the key is absent, the mock provider keeps tests
 and local development deterministic.
 
-JWT is used for stateless auth because the assignment needs a lightweight
-session model and the protected routes are simple bearer-token endpoints.
+JWT is used for stateless auth because this API needs a lightweight session
+model and the protected routes are simple bearer-token endpoints.
 
 ## Testing
 

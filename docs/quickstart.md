@@ -23,11 +23,16 @@ conversation.
 If you set `OPENROUTER_API_KEY` in `.env`, the live provider is used. If the
 key is absent, the deterministic mock provider is used instead.
 
+To run smoke using the default seeded account:
+
+```bash
+make smoke SMOKE_ARGS="--show-stream --use-demo-user"
+```
+
 ## Follow-Up Docs
 
-- `docs/local-dev.md` for non-Docker iteration loops
-- `docs/testing.md` for deterministic test strategy and FastAPI testing refs
-- `docs/architecture.md` for service boundaries and data flow
-- `docs/ci.md` for automation and environment variable handling
-- `docs/scaffolding.md` for from-scratch reconstruction steps
-- `docs/faq.md` for practical reviewer questions
+- [Local Dev](local-dev.md) for non-Docker iteration loops
+- [Testing](testing.md) for deterministic test strategy and FastAPI testing refs
+- [Architecture](architecture.md) for service boundaries and data flow
+- [CI](ci.md) for automation and environment variable handling
+- [Scaffolding](scaffolding.md) for reconstruction steps

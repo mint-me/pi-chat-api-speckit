@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := help
 BASE_URL ?= http://localhost:8000
-SMOKE_ARGS ?=
+SMOKE_ARGS ?= --show-stream
 
-.PHONY: help install run migrate test coverage lint format format-check smoke demo docker-up docker-down test-docker clean
+.PHONY: help install run migrate test coverage lint format format-check smoke demo docker-up docker-down test-docker clean db-reset seed
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -36,6 +36,13 @@ smoke: ## Run the live HTTP smoke test
 
 demo: ## Start Compose and seed demo data
 	docker compose --profile demo up --build
+
+db-reset: ## Recreate DB volume from scratch
+	docker compose down -v --remove-orphans
+	docker compose up -d db api
+
+seed: ## Seed demo user and sample conversation
+	docker compose --profile demo up --build seed
 
 docker-up: ## Build and start Compose
 	docker compose up --build

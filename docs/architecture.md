@@ -56,5 +56,16 @@ tests to keep runs fast and deterministic.
 - Cross-user conversation access returns 404, not 403, to avoid leaking
   resource existence.
 
-See `docs/faq.md` for notes on `alembic/script.py.mako`, `__pycache__`, and
-FastAPI validation status codes.
+## Simple LLM Observability (Without OpenTelemetry)
+
+The current implementation tracks the most useful operational signals with low
+complexity:
+
+- request-level correlation via request ID
+- provider/model metadata on stream completion
+- chunk count and latency in milliseconds
+- explicit error events (`chat.llm_error`) with provider context
+
+This gives practical visibility into the full request path (input -> provider
+call -> stream completion/error -> persistence) without adding tracing
+infrastructure yet.

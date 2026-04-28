@@ -11,16 +11,13 @@ Read this file before writing code.
 
 ## Project Overview
 
-Minimal LLM-powered chat API for the Pi School Software Engineer (ML Systems)
-take-home. Stack: FastAPI, PostgreSQL, SQLAlchemy 2.0 async, Alembic, JWT, SSE,
-OpenRouter plus mock fallback.
+Minimal LLM-powered chat API. Stack: FastAPI, PostgreSQL, SQLAlchemy 2.0 async,
+Alembic, JWT, SSE, OpenRouter plus mock fallback.
 
 This repository is the canonical spec-kit rebuild in `pi-chat-api-speckit/`.
 Other chat projects in the workspace may be read for comparison only.
 
-Submission, remote publishing, and collaborator invitations are out of scope.
-Do not invite reviewers, interviewers, external contributors, or third parties
-from this repository.
+Remote publishing and collaborator invitations are out of scope.
 
 ## Directory Structure
 
@@ -57,7 +54,7 @@ Run commands from the repository root.
 - `make docker-down` stops and removes containers and volumes
 - `make test-docker` runs pytest inside the Compose test container
 
-Reviewer entry point: `docker compose up --build`
+Primary local entry point: `docker compose up --build`
 
 ## Coding Style
 

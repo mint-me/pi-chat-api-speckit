@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Runtime configuration for the chat API."""
 
     environment: Literal["development", "production"] = "development"
-    app_name: str = "Pi School Chat API"
+    app_name: str = "Chat API"
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@db:5432/pi_chat"
     test_database_url: str | None = "sqlite+aiosqlite:///./.pytest/test.db"
