@@ -6,7 +6,33 @@ provider boundary that switches between OpenRouter and a deterministic mock.
 
 ## Quick Start
 
-See [Quickstart](docs/quickstart.md) for the single source of truth.
+Prerequisites: Docker, Docker Compose, Python 3.12, and `uv`.
+
+Install `uv` if needed:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Run the project from a fresh clone:
+
+```bash
+cp .env.example .env
+uv venv -p 3.12
+source .venv/bin/activate
+uv sync --dev
+
+docker compose up -d --build
+docker compose ps
+
+make seed
+make test
+make smoke
+```
+
+The default `.env` leaves `OPENROUTER_API_KEY` empty, so chat uses the
+deterministic mock provider. See [Quickstart](docs/quickstart.md) for live
+OpenRouter setup and troubleshooting.
 
 ## Documentation
 

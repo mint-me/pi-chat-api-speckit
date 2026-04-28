@@ -44,10 +44,29 @@ To run smoke with the seeded demo user:
 make smoke SMOKE_ARGS="--show-stream --use-demo-user"
 ```
 
-To force mock provider in smoke:
+To force the mock provider for Docker smoke, clear `OPENROUTER_API_KEY` in
+`.env` and recreate the API container:
 
 ```bash
-OPENROUTER_API_KEY= make smoke
+docker compose up -d --build --force-recreate api
+make smoke
+```
+
+Setting `OPENROUTER_API_KEY= make smoke` only changes the environment of the
+host-side smoke script. It does not change the environment already loaded by the
+running API container.
+
+To test live OpenRouter smoke, set these values in `.env` and recreate the API
+container:
+
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openrouter/free
+```
+
+```bash
+docker compose up -d --build --force-recreate api
+make smoke
 ```
 
 ## Why `httpx.AsyncClient` Instead of Only FastAPI `TestClient`
