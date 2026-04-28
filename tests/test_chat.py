@@ -1,5 +1,6 @@
 """Tests for the streaming chat endpoint."""
 
+import json
 from collections.abc import AsyncIterator
 
 from app.services.llm import ProviderError
@@ -57,11 +58,17 @@ async def test_chat_provider_failure_emits_error_and_does_not_persist_assistant(
         async def stream(self, messages) -> AsyncIterator[str]:
             if False:
                 yield ""
-            raise ProviderError("boom")
+            raise ProviderError(
+                "boom",
+                code="provider_rate_limited",
+                public_detail="provider rate limited",
+                status_code=429,
+            )
 
     monkeypatch.setattr("app.routers.chat.get_llm_client", lambda settings: FailingClient())
 
     events = []
+    error_payload = None
     async with async_client.stream(
         "POST",
         "/chat",
@@ -72,8 +79,16 @@ async def test_chat_provider_failure_emits_error_and_does_not_persist_assistant(
         async for line in response.aiter_lines():
             if line.startswith("event:"):
                 events.append(line)
+            if line.startswith("data:"):
+                error_payload = json.loads(line.removeprefix("data:").strip())
 
     assert "event: error" in events
+    assert error_payload == {
+        "detail": "provider rate limited",
+        "code": "provider_rate_limited",
+        "provider": "mock",
+        "model": "mock",
+    }
 
     history = await async_client.get("/chat/history", headers=headers)
     messages = history.json()["conversations"][0]["messages"]

@@ -105,11 +105,19 @@ async def stream_assistant_response(
                 "event": "chat.llm_error",
                 "provider": llm_client.name,
                 "model": llm_client.model,
+                "provider_error_code": exc.code,
+                "provider_status_code": exc.status_code,
                 "error_class": exc.__class__.__name__,
                 "latency_ms": latency_ms,
             },
         )
-        yield f"event: error\ndata: {json.dumps({'detail': 'provider unavailable'})}\n\n"
+        payload = {
+            "detail": exc.public_detail,
+            "code": exc.code,
+            "provider": llm_client.name,
+            "model": llm_client.model,
+        }
+        yield f"event: error\ndata: {json.dumps(payload)}\n\n"
         return
     except Exception as exc:  # pragma: no cover - defensive guard
         latency_ms = int((monotonic() - start) * 1000)

@@ -3,7 +3,7 @@
 import httpx
 
 from app.config import Settings
-from app.services.llm import MockClient, OpenRouterClient, get_llm_client
+from app.services.llm import MockClient, OpenRouterClient, ProviderError, get_llm_client
 
 
 async def test_mock_client_streams_deterministic_chunks_with_delay(monkeypatch):
@@ -50,3 +50,25 @@ async def test_openrouter_client_stream_parses_sse(mocked_openrouter):
     async for chunk in client.stream([{"role": "user", "content": "hello"}]):
         chunks.append(chunk)
     assert chunks == ["Hello", " world"]
+
+
+async def test_openrouter_client_maps_rate_limit_to_provider_error(mocked_openrouter):
+    mocked_openrouter.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(429, json={"error": "rate limited"})
+    )
+
+    client = OpenRouterClient(
+        api_key="secret",
+        model="model-x",
+        base_url="https://openrouter.ai/api/v1",
+    )
+
+    try:
+        async for _ in client.stream([{"role": "user", "content": "hello"}]):
+            pass
+    except ProviderError as exc:
+        assert exc.code == "provider_rate_limited"
+        assert exc.public_detail == "provider rate limited"
+        assert exc.status_code == 429
+    else:
+        raise AssertionError("expected ProviderError")

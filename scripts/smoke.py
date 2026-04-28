@@ -2,6 +2,8 @@
 
 import argparse
 import asyncio
+import json
+import sys
 import uuid
 
 import httpx
@@ -27,11 +29,25 @@ async def _register_and_login_random_user(client: httpx.AsyncClient) -> tuple[di
     return await _login_existing_user(client, email, password)
 
 
+async def _wait_for_health(client: httpx.AsyncClient) -> None:
+    last_error: Exception | None = None
+    for _ in range(30):
+        try:
+            response = await client.get("/health")
+            response.raise_for_status()
+            return
+        except httpx.HTTPError as exc:
+            last_error = exc
+            await asyncio.sleep(1)
+    if last_error is not None:
+        raise RuntimeError(f"health check failed: {last_error}") from last_error
+    raise RuntimeError("health check failed")
+
+
 async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = False) -> int:
     """Run a live HTTP smoke test."""
     async with httpx.AsyncClient(base_url=base_url, timeout=30.0) as client:
-        response = await client.get("/health")
-        response.raise_for_status()
+        await _wait_for_health(client)
 
         if use_demo_user:
             headers, email = await _login_existing_user(
@@ -43,6 +59,8 @@ async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = F
         saw_token = False
         saw_done = False
         saw_error = False
+        current_event: str | None = None
+        error_detail = "provider stream returned error event"
         collected_chunks: list[str] = []
         async with client.stream(
             "POST",
@@ -53,18 +71,34 @@ async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = F
             response.raise_for_status()
             async for line in response.aiter_lines():
                 line = line.strip()
-                if line == "event: token":
+                if line.startswith("event: "):
+                    current_event = line.removeprefix("event: ").strip()
+                if current_event == "token" and line == "event: token":
                     saw_token = True
-                if line.startswith("data: ") and saw_token:
-                    chunk = line.removeprefix("data: ").strip()
-                    collected_chunks.append(chunk)
-                if line == "event: done":
+                if line.startswith("data: ") and current_event == "token":
+                    collected_chunks.append(line.removeprefix("data: ").strip())
+                if current_event == "done" and line == "event: done":
                     saw_done = True
-                if line == "event: error":
+                if current_event == "error" and line == "event: error":
                     saw_error = True
+                if line.startswith("data: ") and current_event == "error":
+                    raw_data = line.removeprefix("data: ").strip()
+                    try:
+                        payload = json.loads(raw_data)
+                    except json.JSONDecodeError:
+                        error_detail = raw_data or error_detail
+                    else:
+                        detail = payload.get("detail")
+                        code = payload.get("code")
+                        if detail and code:
+                            error_detail = f"{detail} ({code})"
+                        elif detail:
+                            error_detail = detail
                 if show_stream and line:
                     print(line)
 
+        if saw_error:
+            raise RuntimeError(f"provider stream error: {error_detail}")
         if not (saw_token and saw_done):
             raise RuntimeError("missing SSE events")
 
@@ -82,9 +116,6 @@ async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = F
 
     if show_stream and collected_chunks:
         print(f"stream_chunks={len(collected_chunks)}")
-    if saw_error:
-        raise RuntimeError("provider stream returned error event")
-
     print(f"OK - health, register, login, chat, history passed for {email} (provider: {provider})")
     return 0
 
@@ -103,12 +134,15 @@ if __name__ == "__main__":
         help="Use demo@example.com/password123 instead of creating a random account",
     )
     args = parser.parse_args()
-    raise SystemExit(
-        asyncio.run(
+    try:
+        exit_code = asyncio.run(
             main(
                 args.base_url,
                 show_stream=args.show_stream,
                 use_demo_user=args.use_demo_user,
             )
         )
-    )
+    except (RuntimeError, httpx.HTTPError) as exc:
+        print(f"ERROR - {exc}", file=sys.stderr)
+        raise SystemExit(1) from None
+    raise SystemExit(exit_code)

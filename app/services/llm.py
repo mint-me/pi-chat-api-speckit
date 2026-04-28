@@ -16,6 +16,56 @@ logger = logging.getLogger(__name__)
 class ProviderError(RuntimeError):
     """Raised when a provider request fails."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "provider_unavailable",
+        public_detail: str = "provider unavailable",
+        status_code: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.public_detail = public_detail
+        self.status_code = status_code
+
+
+def _provider_error_for_status(status_code: int) -> ProviderError:
+    if status_code == 429:
+        return ProviderError(
+            "OpenRouter rate limited the request",
+            code="provider_rate_limited",
+            public_detail="provider rate limited",
+            status_code=status_code,
+        )
+    if status_code in {401, 403}:
+        return ProviderError(
+            "OpenRouter rejected the configured credentials",
+            code="provider_auth_failed",
+            public_detail="provider authentication failed",
+            status_code=status_code,
+        )
+    if status_code == 404:
+        return ProviderError(
+            "OpenRouter model or route was not found",
+            code="provider_model_unavailable",
+            public_detail="provider model unavailable",
+            status_code=status_code,
+        )
+    if status_code >= 500:
+        return ProviderError(
+            "OpenRouter is temporarily unavailable",
+            code="provider_unavailable",
+            public_detail="provider temporarily unavailable",
+            status_code=status_code,
+        )
+    return ProviderError(
+        "OpenRouter rejected the request",
+        code="provider_request_failed",
+        public_detail="provider request failed",
+        status_code=status_code,
+    )
+
 
 class LLMClient(ABC):
     """Async streaming interface for chat providers."""
@@ -101,11 +151,8 @@ class OpenRouterClient(LLMClient):
                 json=payload,
             ) as response:
                 if response.status_code >= 400:
-                    body = await response.aread()
-                    raise ProviderError(
-                        "OpenRouter returned "
-                        f"{response.status_code}: {body.decode('utf-8', 'ignore')}"
-                    )
+                    await response.aread()
+                    raise _provider_error_for_status(response.status_code)
 
                 async for line in response.aiter_lines():
                     if not line or line.startswith(":"):
