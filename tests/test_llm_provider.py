@@ -1,6 +1,7 @@
 """Tests for the LLM provider boundary."""
 
 import httpx
+import pytest
 
 from app.config import Settings
 from app.services.llm import MockClient, OpenRouterClient, ProviderError, get_llm_client
@@ -52,9 +53,25 @@ async def test_openrouter_client_stream_parses_sse(mocked_openrouter):
     assert chunks == ["Hello", " world"]
 
 
-async def test_openrouter_client_maps_rate_limit_to_provider_error(mocked_openrouter):
+@pytest.mark.parametrize(
+    ("status_code", "expected_code", "expected_detail"),
+    [
+        (429, "provider_rate_limited", "provider rate limited"),
+        (401, "provider_auth_failed", "provider authentication failed"),
+        (403, "provider_auth_failed", "provider authentication failed"),
+        (404, "provider_model_unavailable", "provider model unavailable"),
+        (500, "provider_unavailable", "provider temporarily unavailable"),
+        (400, "provider_request_failed", "provider request failed"),
+    ],
+)
+async def test_openrouter_client_maps_http_errors_to_provider_errors(
+    mocked_openrouter,
+    status_code,
+    expected_code,
+    expected_detail,
+):
     mocked_openrouter.post("https://openrouter.ai/api/v1/chat/completions").mock(
-        return_value=httpx.Response(429, json={"error": "rate limited"})
+        return_value=httpx.Response(status_code, json={"error": "provider error"})
     )
 
     client = OpenRouterClient(
@@ -63,12 +80,10 @@ async def test_openrouter_client_maps_rate_limit_to_provider_error(mocked_openro
         base_url="https://openrouter.ai/api/v1",
     )
 
-    try:
+    with pytest.raises(ProviderError) as exc_info:
         async for _ in client.stream([{"role": "user", "content": "hello"}]):
             pass
-    except ProviderError as exc:
-        assert exc.code == "provider_rate_limited"
-        assert exc.public_detail == "provider rate limited"
-        assert exc.status_code == 429
-    else:
-        raise AssertionError("expected ProviderError")
+
+    assert exc_info.value.code == expected_code
+    assert exc_info.value.public_detail == expected_detail
+    assert exc_info.value.status_code == status_code
