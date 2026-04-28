@@ -1,22 +1,29 @@
 """Tests for the LLM provider boundary."""
 
-from time import monotonic
-
 import httpx
 
 from app.config import Settings
 from app.services.llm import MockClient, OpenRouterClient, get_llm_client
 
 
-async def test_mock_client_streams_with_delay():
+async def test_mock_client_streams_deterministic_chunks_with_delay(monkeypatch):
+    sleeps = []
+
+    async def fake_sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    monkeypatch.setattr("app.services.llm.asyncio.sleep", fake_sleep)
+
     client = MockClient()
-    start = monotonic()
     chunks = []
     async for chunk in client.stream([{"role": "user", "content": "hello"}]):
         chunks.append(chunk)
-    elapsed = monotonic() - start
-    assert chunks == ["Hello", " from", " the", " mock", " provider."]
-    assert elapsed >= 0.8
+
+    response = "".join(chunks)
+    assert len(chunks) > 1
+    assert response.startswith("The quick brown fox")
+    assert response.endswith("real LLM responses.")
+    assert sleeps == [0.2] * len(chunks)
 
 
 async def test_get_llm_client_uses_mock_without_key():
