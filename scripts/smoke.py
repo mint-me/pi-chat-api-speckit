@@ -70,15 +70,22 @@ async def main(base_url: str, show_stream: bool = False, use_demo_user: bool = F
 
         response = await client.get("/chat/history", headers=headers)
         response.raise_for_status()
-        if not response.json()["conversations"]:
+        history = response.json()
+        if not history["conversations"]:
             raise RuntimeError("history is empty")
+
+        provider = "unknown"
+        if history["conversations"] and history["conversations"][0]["messages"]:
+            last_msg = history["conversations"][0]["messages"][-1]
+            if isinstance(last_msg.get("provider_metadata"), dict):
+                provider = last_msg["provider_metadata"].get("provider", "unknown")
 
     if show_stream and collected_chunks:
         print(f"stream_chunks={len(collected_chunks)}")
     if saw_error:
         raise RuntimeError("provider stream returned error event")
 
-    print(f"OK - health, register, login, chat, history passed for {email}")
+    print(f"OK - health, register, login, chat, history passed for {email} (provider: {provider})")
     return 0
 
 
