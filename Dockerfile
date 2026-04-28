@@ -17,9 +17,10 @@ COPY alembic alembic
 COPY app app
 COPY scripts scripts
 COPY alembic.ini .
-RUN useradd -r -u 1001 -g root -m -d /home/appuser appuser \
-    && mkdir -p /home/appuser/.cache/uv \
-    && chown -R appuser:root /app /home/appuser
+RUN groupadd -r appuser && \
+    useradd -r -u 1001 -g appuser -m -d /home/appuser appuser && \
+    mkdir -p /home/appuser/.cache/uv && \
+    chown -R appuser:appuser /app /home/appuser
 ENV HOME=/home/appuser \
     UV_CACHE_DIR=/home/appuser/.cache/uv
 USER appuser

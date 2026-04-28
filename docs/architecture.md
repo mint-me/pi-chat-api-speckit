@@ -1,5 +1,7 @@
 # Architecture
 
+## Component Layer Diagram
+
 ```mermaid
 flowchart LR
     client[HTTP client] --> router[FastAPI router]
@@ -10,6 +12,49 @@ flowchart LR
     service --> llm[LLMClient]
     llm --> openrouter[OpenRouter]
     llm --> mock[Mock provider]
+```
+
+## Chat Request User Flow
+
+```mermaid
+sequenceDiagram
+    participant User as HTTP Client
+    participant Router as FastAPI Router
+    participant Auth as Auth Dep
+    participant Service as Chat Service
+    participant DB as PostgreSQL
+    participant LLM as LLMClient
+    participant Provider as OpenRouter/Mock
+
+    User->>Router: POST /chat<br/>{"message": "...", "conversation_id": null}
+    Router->>Schema: Parse & validate
+    Router->>Auth: Extract JWT
+    Auth->>DB: Verify user
+    Auth-->>Router: CurrentUser
+    
+    Router->>Service: prepare_chat()
+    Service->>DB: Create conversation
+    Service->>DB: Persist user message
+    Service-->>Router: conversation + messages
+    
+    Router->>Service: stream_assistant_response()
+    Service->>LLM: Start streaming
+    LLM->>Provider: POST /chat/completions
+    Provider-->>LLM: SSE stream...
+    
+    loop Each token chunk
+        LLM->>LLM: Parse delta content
+        LLM-->>Service: yield chunk
+        Service-->>User: event: token\ndata: chunk\n\n
+    end
+    
+    Provider-->>LLM: [DONE]
+    Service->>DB: Persist assistant message
+    Service-->>User: event: done\ndata: {conversation_id}\n\n
+    
+    User->>Router: GET /chat/history
+    Auth->>DB: Fetch conversations (user_id)
+    Router-->>User: [Conversation{...}]
 ```
 
 ## Runtime Components
