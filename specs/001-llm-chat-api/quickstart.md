@@ -19,8 +19,12 @@ docker compose up --build
 Open `http://localhost:8000/docs` or run the live smoke check:
 
 ```bash
-python scripts/smoke.py http://localhost:8000
+uv run python scripts/smoke.py http://localhost:8000
 ```
+
+If another local service already uses port 8000, set `API_PORT=18000` for Compose
+and pass `http://localhost:18000` to the smoke script. The reviewer default
+remains port 8000.
 
 ## Demo Seed Flow
 

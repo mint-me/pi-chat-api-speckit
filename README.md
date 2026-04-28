@@ -1,0 +1,96 @@
+# Pi School Chat API
+
+Minimal FastAPI chat service for the Pi School SWE take-home.
+The app uses PostgreSQL, JWT auth, SSE streaming, Alembic migrations, and a
+provider boundary that switches between OpenRouter and a deterministic mock.
+
+## Quick Start
+
+```bash
+cp .env.example .env
+docker compose up --build
+uv run python scripts/smoke.py
+```
+
+For a seeded demo:
+
+```bash
+docker compose --profile demo up --build
+```
+
+## Documentation
+
+- `docs/quickstart.md` - running the built project
+- `docs/architecture.md` - boundaries and design decisions
+- `docs/local-dev.md` - local development workflow
+- `docs/testing.md` - test layers and mocking strategy
+- `docs/ci.md` - CI rationale
+- `docs/scaffolding.md` - build-from-scratch audit trail
+
+## Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Async SQLAlchemy database URL for runtime |
+| `TEST_DATABASE_URL` | Optional local test database URL |
+| `JWT_SECRET_KEY` | Signing secret, minimum 32 characters |
+| `JWT_ALGORITHM` | JWT algorithm, defaults to `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime |
+| `OPENROUTER_API_KEY` | Enables OpenRouter instead of the mock provider |
+| `OPENROUTER_MODEL` | OpenRouter chat model |
+| `OPENROUTER_BASE_URL` | OpenRouter API base URL |
+
+## API
+
+- `GET /health`
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /chat`
+- `GET /chat/history`
+
+Interactive docs: `http://localhost:8000/docs`
+
+If port 8000 is already in use locally, set `API_PORT=18000` for Compose and run
+`make smoke BASE_URL=http://localhost:18000`.
+
+## Design Decisions
+
+PostgreSQL matches the data shape here: users, conversations, and messages are
+strictly relational, and foreign keys plus unique constraints add real value.
+
+SSE is used for chat streaming because it keeps the protocol simple and is easy
+to test end-to-end with FastAPI and httpx.
+
+OpenRouter is optional. When the key is absent, the mock provider keeps tests
+and local development deterministic.
+
+JWT is used for stateless auth because the assignment needs a lightweight
+session model and the protected routes are simple bearer-token endpoints.
+
+## Testing
+
+```bash
+make test
+make smoke
+make test-docker
+```
+
+## Security Notes
+
+- Never commit `.env`
+- Passwords use Argon2 via `pwdlib`
+- JWT secrets come from env and must be at least 32 characters
+- Logs never include prompts, responses, or API keys
+
+## Next Steps
+
+- Rate limiting
+- OpenTelemetry or Langfuse if observability needs grow
+- Refresh tokens if the auth model expands
+- RAG or Qdrant if the data shape changes
+- GPU-backed provider implementations behind `LLMClient`
+
+## AI Tools
+
+This repository was built with AI-assisted coding. The codebase documents the
+operational rules in `AGENTS.md`.
