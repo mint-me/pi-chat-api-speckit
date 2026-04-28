@@ -1,7 +1,8 @@
 .DEFAULT_GOAL := help
 BASE_URL ?= http://localhost:8000
+SMOKE_ARGS ?=
 
-.PHONY: help install run migrate test coverage lint format format-check smoke demo docker-up docker-down test-docker
+.PHONY: help install run migrate test coverage lint format format-check smoke demo docker-up docker-down test-docker clean
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -31,7 +32,7 @@ format-check: ## Check formatting
 	uv run ruff format --check .
 
 smoke: ## Run the live HTTP smoke test
-	uv run python scripts/smoke.py $(BASE_URL)
+	uv run python scripts/smoke.py $(BASE_URL) $(SMOKE_ARGS)
 
 demo: ## Start Compose and seed demo data
 	docker compose --profile demo up --build
@@ -44,3 +45,7 @@ docker-down: ## Stop and remove Compose containers and volumes
 
 test-docker: ## Run pytest inside the Compose test container
 	docker compose --profile test run --rm test
+
+clean: ## Reset local runtime artifacts and stop Compose stack
+	docker compose down -v --remove-orphans
+	rm -rf .pytest_cache .ruff_cache .coverage .pytest .mypy_cache

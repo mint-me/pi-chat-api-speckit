@@ -6,17 +6,7 @@ provider boundary that switches between OpenRouter and a deterministic mock.
 
 ## Quick Start
 
-```bash
-cp .env.example .env
-docker compose up --build
-uv run python scripts/smoke.py
-```
-
-For a seeded demo:
-
-```bash
-docker compose --profile demo up --build
-```
+See `docs/quickstart.md` for the single source of truth.
 
 ## Documentation
 
@@ -26,6 +16,7 @@ docker compose --profile demo up --build
 - `docs/testing.md` - test layers and mocking strategy
 - `docs/ci.md` - CI rationale
 - `docs/scaffolding.md` - build-from-scratch audit trail
+- `docs/faq.md` - common implementation questions
 
 ## Configuration
 
@@ -73,6 +64,7 @@ session model and the protected routes are simple bearer-token endpoints.
 make test
 make smoke
 make test-docker
+make clean
 ```
 
 ## Security Notes

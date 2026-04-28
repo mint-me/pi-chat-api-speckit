@@ -23,7 +23,8 @@ jobs:
           --health-retries 12
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/pi_chat
-      JWT_SECRET_KEY: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'ci-local-jwt-secret-minimum-32-chars' }}
+      OPENROUTER_API_KEY: ""
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -62,8 +63,9 @@ jobs:
           docker compose logs api
           exit 1
       - name: Smoke test
+        env:
+          OPENROUTER_API_KEY: ""
         run: uv run python scripts/smoke.py http://localhost:8000
       - name: Logs on failure
         if: failure()
         run: docker compose logs api
-

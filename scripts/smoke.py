@@ -1,13 +1,13 @@
 """End-to-end smoke test against a running pi-chat-api stack."""
 
+import argparse
 import asyncio
-import sys
 import uuid
 
 import httpx
 
 
-async def main(base_url: str) -> int:
+async def main(base_url: str, show_stream: bool = False) -> int:
     """Run a live HTTP smoke test."""
     email = f"smoke+{uuid.uuid4().hex[:8]}@example.com"
     password = "password123"
@@ -31,6 +31,8 @@ async def main(base_url: str) -> int:
 
         saw_token = False
         saw_done = False
+        saw_error = False
+        collected_chunks: list[str] = []
         async with client.stream(
             "POST",
             "/chat",
@@ -42,8 +44,15 @@ async def main(base_url: str) -> int:
                 line = line.strip()
                 if line == "event: token":
                     saw_token = True
+                if line.startswith("data: ") and saw_token:
+                    chunk = line.removeprefix("data: ").strip()
+                    collected_chunks.append(chunk)
                 if line == "event: done":
                     saw_done = True
+                if line == "event: error":
+                    saw_error = True
+                if show_stream and line:
+                    print(line)
 
         if not (saw_token and saw_done):
             raise RuntimeError("missing SSE events")
@@ -53,10 +62,22 @@ async def main(base_url: str) -> int:
         if not response.json()["conversations"]:
             raise RuntimeError("history is empty")
 
+    if show_stream and collected_chunks:
+        print(f"stream_chunks={len(collected_chunks)}")
+    if saw_error:
+        raise RuntimeError("provider stream returned error event")
+
     print(f"OK - health, register, login, chat, history passed for {email}")
     return 0
 
 
 if __name__ == "__main__":
-    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
-    raise SystemExit(asyncio.run(main(base_url)))
+    parser = argparse.ArgumentParser(description="Run live smoke test against running API")
+    parser.add_argument("base_url", nargs="?", default="http://localhost:8000")
+    parser.add_argument(
+        "--show-stream",
+        action="store_true",
+        help="Print SSE lines from /chat for debugging",
+    )
+    args = parser.parse_args()
+    raise SystemExit(asyncio.run(main(args.base_url, show_stream=args.show_stream)))
