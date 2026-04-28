@@ -2,12 +2,15 @@
 
 import asyncio
 import json
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Sequence
 
 import httpx
 
 from app.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 class ProviderError(RuntimeError):
@@ -87,8 +90,9 @@ class OpenRouterClient(LLMClient):
                         continue
                     delta = choices[0].get("delta") or {}
                     content = delta.get("content")
-                    if content:
-                        yield content
+                    if content is None:
+                        continue
+                    yield content
 
 
 def get_llm_client(settings: Settings) -> LLMClient:

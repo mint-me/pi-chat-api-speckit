@@ -96,7 +96,7 @@ async def stream_assistant_response(
                 continue
             chunks.append(chunk)
             chunk_count += 1
-            yield f"event: token\ndata: {json.dumps({'content': chunk})}\n\n"
+            yield f"event: token\ndata: {chunk}\n\n"
     except ProviderError as exc:
         latency_ms = int((monotonic() - start) * 1000)
         logger.info(
