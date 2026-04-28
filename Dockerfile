@@ -23,4 +23,5 @@ RUN useradd -r -u 1001 -g root -m -d /home/appuser appuser \
 ENV HOME=/home/appuser \
     UV_CACHE_DIR=/home/appuser/.cache/uv
 USER appuser
+EXPOSE 8000
 CMD ["uv", "run", "--no-sync", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

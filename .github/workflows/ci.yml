@@ -50,6 +50,8 @@ jobs:
           python-version: "3.12"
       - name: Sync dependencies
         run: uv sync --frozen --dev
+      - name: Prepare env file
+        run: cp .env.example .env
       - name: Start stack
         run: docker compose up -d --build
       - name: Wait for health
